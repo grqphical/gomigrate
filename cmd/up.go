@@ -10,14 +10,14 @@ import (
 	"github.com/grqphical/gomigrate/internal/database"
 )
 
-var initCmd = &cobra.Command{
-	Use:   "init",
-	Short: "Initalizes a database for migrations",
+var upCmd = &cobra.Command{
+	Use:   "up",
+	Short: "A brief description of your command",
 	Long:  ``,
-	Run:   initCommand,
+	Run:   upCommand,
 }
 
-func initCommand(cmd *cobra.Command, args []string) {
+func upCommand(cmd *cobra.Command, args []string) {
 	godotenv.Load("./.env")
 
 	db_url := os.Getenv("DB_URL")
@@ -28,13 +28,7 @@ func initCommand(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	err = database.CreateMigrationTable(db)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: %s\n", err.Error())
-		return
-	}
-
-	err = os.MkdirAll("migrations", 0755)
+	err = database.ApplyMigrations(db)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: %s\n", err.Error())
 		return
@@ -42,5 +36,5 @@ func initCommand(cmd *cobra.Command, args []string) {
 }
 
 func init() {
-	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(upCmd)
 }
