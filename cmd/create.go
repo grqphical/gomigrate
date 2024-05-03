@@ -13,7 +13,7 @@ const MigrationDir = "migrations"
 
 var createCmd = &cobra.Command{
 	Use:   "create",
-	Short: "A brief description of your command",
+	Short: "Create a new migration up and migration down SQL file in ./migrations",
 	Long:  ``,
 	Run:   createCommand,
 }
@@ -27,19 +27,30 @@ func createCommand(cmd *cobra.Command, args []string) {
 	name := args[0]
 
 	timestamp := time.Now().Unix()
-	filename := fmt.Sprintf("%d_%s.sql", timestamp, name)
+	filename := fmt.Sprintf("%d_%s.up.sql", timestamp, name)
 	path := filepath.Join(MigrationDir, filename)
 
 	file, err := os.Create(path)
 	if err != nil {
 		fmt.Fprintf(
 			os.Stderr,
-			"ERROR: could not create migration. Make sure you have run gomigrate init first.",
+			"ERROR: could not create up migration. Make sure you have run gomigrate init first.",
 		)
 		return
 	}
 	defer file.Close()
-	fmt.Printf("Created migration file: %s\n", path)
+
+	path = fmt.Sprintf("%d_%s.down.sql", timestamp, name)
+	file, err = os.Create(path)
+	if err != nil {
+		fmt.Fprintf(
+			os.Stderr,
+			"ERROR: could not create down migration. Make sure you have run gomigrate init first.",
+		)
+		return
+	}
+	defer file.Close()
+	fmt.Printf("Created migration: %s\n", name)
 }
 
 func init() {

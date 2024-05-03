@@ -20,7 +20,13 @@ var initCmd = &cobra.Command{
 func initCommand(cmd *cobra.Command, args []string) {
 	godotenv.Load("./.env")
 
-	db_url := os.Getenv("DB_URL")
+	db_url := os.Getenv("DATABASE_URL")
+	if db_url == "" {
+		fmt.Println(
+			"ERROR: DATABASE_URL env variable is not set. Make sure it is set or present in a '.env' file",
+		)
+		return
+	}
 
 	db, err := database.NewDatabaseConn(db_url)
 	if err != nil {

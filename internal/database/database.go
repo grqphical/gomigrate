@@ -83,7 +83,9 @@ func ApplyMigrations(db *sql.DB) error {
 	}
 
 	var appliedMigrations []string
-	rows, err := db.Query(fmt.Sprintf("SELECT name FROM %s", MigrationTableName))
+	rows, err := db.Query(
+		fmt.Sprintf("SELECT name FROM %s ORDER BY applied_at DESC", MigrationTableName),
+	)
 	if err != nil {
 		return err
 	}
@@ -163,7 +165,9 @@ func rollbackMigration(db *sql.DB, migrationName string) error {
 
 func RollbackMigrations(db *sql.DB) error {
 	var appliedMigrations []string
-	rows, err := db.Query(fmt.Sprintf("SELECT name FROM %s ORDER BY id DESC", MigrationTableName))
+	rows, err := db.Query(
+		fmt.Sprintf("SELECT name FROM %s ORDER BY applied_at DESC", MigrationTableName),
+	)
 	if err != nil {
 		return err
 	}
