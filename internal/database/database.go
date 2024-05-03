@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -97,6 +98,9 @@ func ApplyMigrations(db *sql.DB) error {
 	}
 
 	for _, file := range files {
+		if strings.Count(file.Name(), "down") > 0 {
+			continue
+		}
 		if !contains(appliedMigrations, file.Name()) {
 			path := filepath.Join(MigrationsDir, file.Name())
 			data, err := os.ReadFile(path)
@@ -127,6 +131,56 @@ func ApplyMigrations(db *sql.DB) error {
 			fmt.Printf("Applied migration: %s\n", path)
 
 			tx.Commit()
+		}
+	}
+
+	return nil
+}
+
+func rollbackMigration(db *sql.DB, migrationName string) error {
+	path := filepath.Join(MigrationsDir, migrationName)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(string(data))
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(
+		fmt.Sprintf("DELETE FROM %s WHERE name = ?", MigrationTableName),
+		migrationName,
+	)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Rolled back migration: %s\n", migrationName)
+	return nil
+}
+
+func RollbackMigrations(db *sql.DB) error {
+	var appliedMigrations []string
+	rows, err := db.Query(fmt.Sprintf("SELECT name FROM %s ORDER BY id DESC", MigrationTableName))
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var name string
+		err := rows.Scan(&name)
+		if err != nil {
+			return err
+		}
+		appliedMigrations = append(appliedMigrations, strings.Replace(name, "up", "down", 1))
+	}
+
+	for _, migrationName := range appliedMigrations {
+		err := rollbackMigration(db, migrationName)
+		if err != nil {
+			return err
 		}
 	}
 
