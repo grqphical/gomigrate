@@ -191,7 +191,7 @@ func RollbackMigrations(db *sql.DB) error {
 	return nil
 }
 
-func ListMigrations(db *sql.DB) error {
+func ListMigrations(db *sql.DB, showHeader bool) error {
 	rows, err := db.Query(
 		fmt.Sprintf(
 			"SELECT id, name, applied_at FROM %s ORDER BY applied_at DESC",
@@ -203,7 +203,9 @@ func ListMigrations(db *sql.DB) error {
 	}
 	defer rows.Close()
 
-	fmt.Printf("%-4s %-32s %-19s\n", "ID", "NAME", "DATE_APPLIED")
+	if showHeader {
+		fmt.Printf("%-4s %-32s %-19s\n", "ID", "NAME", "DATE_APPLIED")
+	}
 
 	for rows.Next() {
 		var name string

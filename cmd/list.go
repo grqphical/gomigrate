@@ -12,7 +12,7 @@ import (
 
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "A brief description of your command",
+	Short: "Lists all migrations applied in the database",
 	Long:  ``,
 	Run:   ListCommand,
 }
@@ -34,7 +34,9 @@ func ListCommand(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	err = database.ListMigrations(db)
+	header, _ := cmd.Flags().GetBool("header")
+
+	err = database.ListMigrations(db, header)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: %s\n", err.Error())
 		return
@@ -43,4 +45,6 @@ func ListCommand(cmd *cobra.Command, args []string) {
 
 func init() {
 	rootCmd.AddCommand(listCmd)
+
+	listCmd.Flags().BoolP("header", "t", false, "Print a header with the list")
 }
