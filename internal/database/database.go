@@ -178,7 +178,7 @@ func RollbackMigrations(db *sql.DB) error {
 		if err != nil {
 			return err
 		}
-		appliedMigrations = append(appliedMigrations, strings.Replace(name, "up", "down", 1))
+		appliedMigrations = append(appliedMigrations, name)
 	}
 
 	for _, migrationName := range appliedMigrations {
@@ -186,6 +186,35 @@ func RollbackMigrations(db *sql.DB) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func ListMigrations(db *sql.DB) error {
+	rows, err := db.Query(
+		fmt.Sprintf(
+			"SELECT id, name, applied_at FROM %s ORDER BY applied_at DESC",
+			MigrationTableName,
+		),
+	)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	fmt.Printf("%-4s %-32s %-19s\n", "ID", "NAME", "DATE_APPLIED")
+
+	for rows.Next() {
+		var name string
+		var applied_at time.Time
+		var id int
+		err := rows.Scan(&id, &name, &applied_at)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("%-4d %-32s %-19s\n", id, name, applied_at.Format(time.DateTime))
 	}
 
 	return nil
