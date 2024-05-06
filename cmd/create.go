@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const MigrationDir = "migrations"
+const MigrationDir = "./migrations"
 
 var createCmd = &cobra.Command{
 	Use:   "create",
@@ -40,7 +40,8 @@ func createCommand(cmd *cobra.Command, args []string) {
 	}
 	defer file.Close()
 
-	path = fmt.Sprintf("%d_%s.down.sql", timestamp, name)
+	filename = fmt.Sprintf("%d_%s.down.sql", timestamp, name)
+	path = filepath.Join(MigrationDir, filename)
 	file, err = os.Create(path)
 	if err != nil {
 		fmt.Fprintf(
